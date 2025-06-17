@@ -1,0 +1,12 @@
+[Unit]
+Description=Sendora Voice Health Check Service
+After=sendora-voice.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/sendora-voice/health_check.sh
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target 

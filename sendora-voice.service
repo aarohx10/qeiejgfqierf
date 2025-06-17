@@ -1,0 +1,65 @@
+[Unit]
+Description=Sendora Voice AI Application
+After=network.target redis.service
+Requires=redis.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/sendora-voice
+Environment="PATH=/opt/sendora-voice/venv/bin"
+Environment="PYTHONPATH=/opt/sendora-voice"
+Environment="REDIS_URL=redis://:your_redis_password@localhost:6379/0"
+Environment="PYTHONUNBUFFERED=1"
+Environment="LOG_LEVEL=INFO"
+Environment="ENVIRONMENT=production"
+Environment="WORKERS=4"
+Environment="TIMEOUT=120"
+Environment="KEEP_ALIVE=5"
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=65535
+MemoryLimit=2G
+CPUQuota=80%
+
+# Logging
+StandardOutput=append:/var/log/sendora-voice/app.log
+StandardError=append:/var/log/sendora-voice/error.log
+SyslogIdentifier=sendora-voice
+
+# Process management
+ExecStart=/opt/sendora-voice/venv/bin/gunicorn \
+    --workers ${WORKERS} \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:8000 \
+    --timeout ${TIMEOUT} \
+    --keep-alive ${KEEP_ALIVE} \
+    --log-level ${LOG_LEVEL} \
+    --access-logfile /var/log/sendora-voice/access.log \
+    --error-logfile /var/log/sendora-voice/error.log \
+    --capture-output \
+    --enable-stdio-inheritance \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --graceful-timeout 30 \
+    --preload \
+    src.main:app
+
+# Restart policy
+Restart=always
+RestartSec=1
+TimeoutStartSec=120
+TimeoutStopSec=120
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=yes
+PrivateTmp=yes
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target 

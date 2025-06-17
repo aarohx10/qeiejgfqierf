@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Sendora Voice health check every 5 minutes
+Requires=sendora-voice.service
+
+[Timer]
+OnCalendar=*:*:00/5
+AccuracySec=1s
+RandomizedDelaySec=30
+
+[Install]
+WantedBy=timers.target 
